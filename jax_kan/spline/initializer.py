@@ -4,12 +4,12 @@ import jax
 import jax.numpy as jnp
 from flax import nnx
 
-from jax_kan.base.initializer import Initializer
+from jax_kan.base.initializer import SplineInitializer
 from jax_kan.spline.function import basis_spline
 from jax_kan.spline.grid import SplineGrid
 
 
-class DefaultInitializer(Initializer):
+class DefaultInitializer(SplineInitializer):
     def __init__(self, std: float = 0.1) -> None:
         self.std = std
 
@@ -40,7 +40,7 @@ class DefaultInitializer(Initializer):
         return c_res, c_basis
 
 
-class PowerInitializer(Initializer):
+class PowerInitializer(SplineInitializer):
     def __init__(
         self,
         const_b: float = 1.0,
@@ -89,7 +89,7 @@ class PowerInitializer(Initializer):
         return c_res, c_basis
 
 
-class LecunInitializer(Initializer):
+class LecunInitializer(SplineInitializer):
     def __init__(
         self,
         distribution: str = "uniform",
@@ -165,7 +165,7 @@ class LecunInitializer(Initializer):
         return c_res, c_basis
 
 
-class GlorotInitializer(Initializer):
+class GlorotInitializer(SplineInitializer):
     def __init__(
         self,
         distribution: str = "uniform",

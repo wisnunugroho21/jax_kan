@@ -7,14 +7,14 @@ from flax import nnx
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 
-from jax_kan.spline.initializer import DefaultInitializer
-from jax_kan.spline.layer import SplineKanLayer
+from jax_kan.chebyshev.initializer import DefaultInitializer
+from jax_kan.chebyshev.layer import ChebyshevLayer
 
 
 class KAN(nnx.Module):
     def __init__(self) -> None:
-        self.s1 = SplineKanLayer(2, 5, seed=42, initializer=DefaultInitializer())
-        self.s2 = SplineKanLayer(5, 1, seed=42, initializer=DefaultInitializer())
+        self.s1 = ChebyshevLayer(2, 5, seed=42, initializer=DefaultInitializer())
+        self.s2 = ChebyshevLayer(5, 1, seed=42, initializer=DefaultInitializer())
 
     def __call__(self, x: jax.Array) -> jax.Array:
         x = self.s1(x)

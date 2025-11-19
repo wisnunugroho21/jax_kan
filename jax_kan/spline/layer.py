@@ -4,11 +4,12 @@ import jax
 import jax.numpy as jnp
 from flax import nnx
 
-from jax_kan.base.initializer import Initializer
+from jax_kan.base.initializer import SplineInitializer
 from jax_kan.base.layer import KanLayer
-from jax_kan.spline.function import basis_spline, solve_full_lstsq
+from jax_kan.spline.function import basis_spline
 from jax_kan.spline.grid import SplineGrid
 from jax_kan.spline.initializer import DefaultInitializer
+from jax_kan.util.general import solve_full_lstsq
 
 
 class SplineKanLayer(KanLayer):
@@ -50,7 +51,7 @@ class SplineKanLayer(KanLayer):
         grid_e: float = 0.05,
         residual: Callable[[jax.Array], jax.Array] | None = nnx.silu,
         weight_coef_spline: bool = True,
-        initializer: Initializer = DefaultInitializer(),
+        initializer: SplineInitializer = DefaultInitializer(),
         add_bias: bool = True,
         seed: int = 42,
     ):
@@ -160,7 +161,9 @@ class SplineKanLayer(KanLayer):
 
         # Apply the inputs to the current grid to acquire y = Sum(ciBi(x)), where ci are
         # the current coefficients and Bi(x) are the current spline basis functions
-        Bi = basis_spline(x, self.grid)  # (n_in*n_out, G+k, batch)
+        Bi = basis_spline(
+            x, self.grid.item, self.n_in, self.n_out, self.k
+        )  # (n_in*n_out, G+k, batch)
         ci = self.c_basis.value  # (n_in*n_out, G+k)
         ciBi = jnp.einsum("ij,ijk->ik", ci, Bi)  # (n_in*n_out, batch)
 
@@ -168,7 +171,9 @@ class SplineKanLayer(KanLayer):
         self.grid.update(x, G_new)
 
         # Get the Bj(x) for the new grid
-        A = basis_spline(x, self.grid)  # shape (n_in*n_out, G_new+k, batch)
+        A = basis_spline(
+            x, self.grid.item, self.n_in, self.n_out, self.k
+        )  # shape (n_in*n_out, G_new+k, batch)
         Bj = jnp.transpose(A, (0, 2, 1))  # shape (n_in*n_out, batch, G_new+k)
 
         # Expand ciBi from (n_in*n_out, batch) to (n_in*n_out, batch, 1)
@@ -209,7 +214,7 @@ class SplineKanLayer(KanLayer):
 
         # Calculate spline basis activations
         Bi = basis_spline(
-            x, self.grid, self.n_in, self.n_out, self.k
+            x, self.grid.item, self.n_in, self.n_out, self.k
         )  # (n_in*n_out, G+k, batch)
         ci = self.c_basis.value  # (n_in*n_out, G+k)
         # Calculate spline activation
